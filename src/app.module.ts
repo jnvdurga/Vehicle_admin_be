@@ -6,9 +6,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppLoggerModule } from './common/logger/logger.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthController } from './modules/auth/controllers/auth.controller';
+import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
     AuthModule,
+    PrismaModule,
     ThrottlerModule.forRoot([
       {
         ttl: 6000,
