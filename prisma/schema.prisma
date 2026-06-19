@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+provider = "prisma-client-js"
 }
 
 datasource db {
@@ -19,12 +18,16 @@ model User {
   email    String  @unique
   phone    String? @unique
   password String
+  isEmailVerified Boolean @default(false)
+  lastLoginAt DateTime?
 
   isActive Boolean @default(true)
+  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  ownedFleets Fleet[]
   userRoles               UserRole[]
   vehicleAssignments      VehicleAssignment[]
   sessions                UserSession[]
@@ -91,10 +94,20 @@ model Fleet {
   id   String @id @default(cuid())
   name String
 
+  ownerId String
+
+  owner User @relation(
+    fields: [ownerId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  vehicles vehicle[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  vehicles Vehicle[]
+ 
+ @@index([ownerId])
 }
 
 model Vehicle {
@@ -130,8 +143,8 @@ model VehicleAssignment {
   vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([vehicleId])
-  @@index([userId])
+@@index([vehicleId, unassignedAt])
+@@index([userId, unassignedAt])
 }
 
 model UserSession {

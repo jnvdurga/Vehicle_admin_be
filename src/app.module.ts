@@ -5,8 +5,9 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppLoggerModule } from './common/logger/logger.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AuthController } from './modules/auth/controllers/auth.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+
 @Module({
   imports: [
     AuthModule,
@@ -17,9 +18,13 @@ import { PrismaModule } from './prisma/prisma.module';
         limit: 3,
       },
     ]),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     AppLoggerModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController],
   providers: [
     AppService,
     {
