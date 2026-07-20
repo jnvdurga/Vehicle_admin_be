@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vehicle
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/vehicle?schema=public"
+      NODE_ENV: production
+      # Optional instance identifier for debugging/identification
+      INSTANCE_ID: "${INSTANCE_ID:-1}"
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma migrate deploy && node dist/main"
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+
+  nginx:
+    image: nginx:stable-alpine
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - default
+
+volumes:
+  db_data:

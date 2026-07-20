@@ -96,3 +96,55 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Containerization
+
+Build and run the application with Docker Compose (this starts Postgres, the app, and Adminer):
+
+```bash
+docker compose up --build
+```
+
+Visit the API at http://localhost:3000 and Adminer at http://localhost:8080 (Postgres credentials: `postgres`/`postgres`, database `vehicle`).
+
+Scaling and instance tips
+
+- Start (build and run) in detached mode:
+
+```bash
+docker compose up -d --build
+```
+
+- Scale the `app` service to N replicas (Docker Compose will round-robin service DNS):
+
+```bash
+docker compose up -d --build --scale app=3
+```
+
+- Pass an environment `INSTANCE_ID` to all replicas (same value for each replica):
+
+```bash
+INSTANCE_ID=2 docker compose up -d --build --scale app=3
+```
+
+- If you need unique instance identifiers per container for testing, run multiple services with different envs (example `docker-compose.override.yml`):
+
+```yaml
+services:
+  app1:
+    extends: app
+    environment:
+      INSTANCE_ID: "1"
+
+  app2:
+    extends: app
+    environment:
+      INSTANCE_ID: "2"
+```
+
+Note: `docker compose up --scale` shares the same environment for all replicas. Use separate service entries for distinct env values.
+
+Docker runtime note
+
+I attempted to run `docker compose up -d --build` from this environment, but Docker is not available here. Please run the commands above on your machine where Docker is installed.
+
