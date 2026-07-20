@@ -1,5 +1,5 @@
 generator client {
-provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -14,48 +14,53 @@ enum AssignmentRole {
 
 model User {
   id       String  @id @default(cuid())
-  name     String
-  email    String  @unique
-  phone    String? @unique
+  name     String  @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
+  phone    String? @unique @db.VarChar(20)
   password String
-  isEmailVerified Boolean @default(false)
-  lastLoginAt DateTime?
 
-  isActive Boolean @default(true)
-  
+  isEmailVerified Boolean   @default(false)
+  lastLoginAt     DateTime?
+  isActive        Boolean   @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ownedFleets Fleet[]
+  ownedFleets             Fleet[]
   userRoles               UserRole[]
   vehicleAssignments      VehicleAssignment[]
   sessions                UserSession[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+
+  @@map("users")
 }
 
 model Role {
   id          String  @id @default(cuid())
-  name        String  @unique
-  description String?
+  name        String  @unique @db.VarChar(100)
+  description String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   users       UserRole[]
   permissions RolePermission[]
+
+  @@map("roles")
 }
 
 model Permission {
   id          String  @id @default(cuid())
-  action      String  @unique
-  description String?
+  action      String  @unique @db.VarChar(150)
+  description String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   roles RolePermission[]
+
+  @@map("permissions")
 }
 
 model RolePermission {
@@ -72,6 +77,7 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
+  @@map("role_permissions")
 }
 
 model UserRole {
@@ -88,26 +94,23 @@ model UserRole {
   @@unique([userId, roleId])
   @@index([userId])
   @@index([roleId])
+  @@map("user_roles")
 }
 
 model Fleet {
-  id   String @id @default(cuid())
-  name String
-
+  id      String @id @default(cuid())
+  name    String @db.VarChar(255)
   ownerId String
 
-  owner User @relation(
-    fields: [ownerId],
-    references: [id],
-    onDelete: Cascade
-  )
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  vehicles vehicle[]
+  vehicles Vehicle[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
- @@index([ownerId])
+
+  @@index([ownerId])
+  @@map("fleets")
 }
 
 model Vehicle {
@@ -116,8 +119,8 @@ model Vehicle {
   fleetId String
   fleet   Fleet  @relation(fields: [fleetId], references: [id], onDelete: Cascade)
 
-  name    String
-  plateNo String @unique
+  name    String @db.VarChar(255)
+  plateNo String @unique @db.VarChar(20)
 
   isActive Boolean @default(true)
 
@@ -127,6 +130,7 @@ model Vehicle {
   assignments VehicleAssignment[]
 
   @@index([fleetId])
+  @@map("vehicles")
 }
 
 model VehicleAssignment {
@@ -140,11 +144,14 @@ model VehicleAssignment {
   assignedAt   DateTime  @default(now())
   unassignedAt DateTime?
 
-  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Restrict (not Cascade) so assignment history survives vehicle/user edits
+  // and isn't silently wiped by an unrelated delete elsewhere.
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
 
-@@index([vehicleId, unassignedAt])
-@@index([userId, unassignedAt])
+  @@index([vehicleId, unassignedAt])
+  @@index([userId, unassignedAt])
+  @@map("vehicle_assignments")
 }
 
 model UserSession {
@@ -154,13 +161,12 @@ model UserSession {
 
   refreshTokenHash String @unique
 
-  deviceName String?
-  ipAddress  String?
-  userAgent  String?
+  deviceName String? @db.VarChar(255)
+  ipAddress  String? @db.VarChar(45)
+  userAgent  String? @db.Text
 
   expiresAt DateTime
-
-  isRevoked Boolean @default(false)
+  isRevoked Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,6 +175,7 @@ model UserSession {
 
   @@index([userId])
   @@index([expiresAt])
+  @@map("user_sessions")
 }
 
 model PasswordResetToken {
@@ -179,8 +186,7 @@ model PasswordResetToken {
   tokenHash String @unique
 
   expiresAt DateTime
-
-  usedAt DateTime?
+  usedAt    DateTime?
 
   createdAt DateTime @default(now())
 
@@ -188,6 +194,7 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model EmailVerificationToken {
@@ -198,8 +205,7 @@ model EmailVerificationToken {
   tokenHash String @unique
 
   expiresAt DateTime
-
-  usedAt DateTime?
+  usedAt    DateTime?
 
   createdAt DateTime @default(now())
 
@@ -207,4 +213,5 @@ model EmailVerificationToken {
 
   @@index([userId])
   @@index([expiresAt])
+  @@map("email_verification_tokens")
 }
