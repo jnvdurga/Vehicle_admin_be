@@ -6,12 +6,12 @@ export const seedRolePermissions = async () => {
 
     FLEET_MANAGER: [
       'fleet:create',
-      'fleet:view',
+      'fleet:read',
       'fleet:update',
       'fleet:delete',
 
       'vehicle:create',
-      'vehicle:view',
+      'vehicle:read',
       'vehicle:update',
       'vehicle:delete',
       'vehicle:track',
@@ -22,33 +22,33 @@ export const seedRolePermissions = async () => {
       'vehicle:engine_unlock',
 
       'driver:create',
-      'driver:view',
+      'driver:read',
       'driver:update',
       'driver:assign',
       'driver:remove',
 
       'caretaker:create',
-      'caretaker:view',
+      'caretaker:read',
       'caretaker:assign',
       'caretaker:remove',
 
-      'alert:view',
+      'alert:read',
       'alert:configure',
     ],
 
     DRIVER: [
-      'vehicle:view',
+      'vehicle:read',
       'vehicle:track',
       'vehicle:view_history',
       'vehicle:parking_mode',
       'vehicle:driving_mode',
 
-      'alert:view',
+      'alert:read',
       'alert:receive',
     ],
 
     CARETAKER: [
-      'vehicle:view',
+      'vehicle:read',
       'vehicle:track',
       'alert:receive',
     ],
@@ -91,8 +91,9 @@ export const seedRolePermissions = async () => {
         where: { action },
       });
 
-      if (!permission) continue;
-
+      if (!permission) {
+        throw new Error(`Permission '${action}' not found.`);
+      }
       await prisma.rolePermission.upsert({
         where: {
           roleId_permissionId: {

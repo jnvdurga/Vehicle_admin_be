@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { seedPermissions } from './permissions.seed';
 import { seedRoles } from './roles.seed';
 import { seedRolePermissions } from './role-permissions.seed';
@@ -7,7 +8,7 @@ import { prisma } from './prisma.seed.client';
 const main = async () => {
   try {
     console.log('🌱 Seeding started...');
-
+     console.log(process.env.DATABASE_URL);
     await seedPermissions();
     await seedRoles();
     await seedRolePermissions();
